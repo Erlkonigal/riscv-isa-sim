@@ -1,0 +1,14 @@
+spike_cosim_subproject_deps = \
+	riscv \
+	disasm \
+	softfloat \
+	fdt \
+	fesvr \
+
+spike_cosim_srcs = \
+	Simulation.cc \
+
+spike_cosim_CFLAGS = -fPIC -I$(if $(COSIM_INCLUDE_DIR),$(COSIM_INCLUDE_DIR),../cosim/include)
+spike_cosim_LDFLAGS = -Wl,--start-group
+spike_cosim_LIBS = -Wl,--end-group
+spike_cosim_install_shared_lib = yes

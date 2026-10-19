@@ -1,4 +1,5 @@
 build/
+build-cosim/
 *.gch
 autom4te.cache/
 .*.swp
