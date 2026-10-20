@@ -17,3 +17,7 @@ because the ISA, disassembler, and SoftFloat archives have cyclic references.
 The library exports `cosim_simulation_api`. Its platform description matches
 the default Jeucore simulation map: RAM at `0x80000000`, an uncached RAM page,
 and the UART at `0x12002000`.
+
+The adapter accepts the common waveform configuration in the cosim API for
+ABI compatibility. Spike has no RTL waveform backend, so it ignores waveform
+settings; they can be enabled for a Verilator DUT while Spike runs as a REF.
