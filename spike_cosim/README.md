@@ -14,13 +14,13 @@ make COSIM_INCLUDE_DIR=/path/to/cosim/include libspike_cosim.so
 The generated shared-library rule links Spike's static subprojects as a group,
 because the ISA, disassembler, and SoftFloat archives have cyclic references.
 
-The library exports `cosim_simulation_api`. Its platform description matches
-the default Jeucore simulation map: RAM at `0x80000000`, an uncached RAM page,
-and the UART at `0x12002000`.
+The library exports `cosim_simulation_api`. It does not export
+`cosim_signal_trace_api` because Spike has no SignalTrace schemas. Its platform
+description matches the default Jeucore simulation map: RAM at `0x80000000`, an
+uncached RAM page, and the UART at `0x12002000`.
 
 Each `step` returns either one retired instruction or an idle result through the
-common API v4 result structure. Spike has no SignalTrace schemas, so trace
-queries report an empty catalog. Pass and fail PCs are configured by the cosim
+common API v5 result structure. Pass and fail PCs are configured by the cosim
 runtime rather than embedded in this platform description.
 
 The adapter accepts the common waveform configuration in the cosim API for

@@ -181,17 +181,9 @@ int step(void* simulation, cosim_step_result_t* result) {
     return static_cast<SpikeSimulation*>(simulation)->step(result);
 }
 int finished(void* simulation) { return static_cast<SpikeSimulation*>(simulation)->finished(); }
-int tracePoll(void*, cosim_signal_event_handle_t** event) { if (event) *event = nullptr; return 0; }
-int traceSchemaCount(void*, unsigned* count) { if (count) *count = 0; return count ? 0 : 1; }
-int traceSchemaGet(void*, unsigned, cosim_signal_schema_t*) { return 1; }
-int traceSchemaFieldGet(void*, unsigned, unsigned, cosim_signal_field_t*) { return 1; }
-int traceEventInfo(cosim_signal_event_handle_t*, cosim_signal_event_t*) { return 1; }
-int traceEventCopy(cosim_signal_event_handle_t*, uint64_t*, size_t, size_t*) { return 2; }
-void traceEventRelease(cosim_signal_event_handle_t*) {}
 void destroy(void* simulation) { delete static_cast<SpikeSimulation*>(simulation); }
 }
 
 extern "C" const cosim_simulation_api_t cosim_simulation_api = {
     COSIM_SIMULATION_API_VERSION, "spike", describe, create, reset, step, finished,
-    tracePoll, traceSchemaCount, traceSchemaGet, traceSchemaFieldGet,
-    traceEventInfo, traceEventCopy, traceEventRelease, destroy};
+    destroy};
