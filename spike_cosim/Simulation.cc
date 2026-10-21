@@ -25,7 +25,7 @@ constexpr cosim_region_spec_t regions[] = {
     {0x12002000ULL, 0x1000ULL, "uart", "uart", "dw_apb_uart", 3, 1, 0},
 };
 constexpr cosim_platform_spec_t platform = {
-    regions, sizeof(regions) / sizeof(regions[0]), 0x80000000ULL, 0x80000004ULL, 0x80000008ULL};
+    regions, sizeof(regions) / sizeof(regions[0]), 0x80000000ULL};
 
 class HostMemory final : public abstract_mem_t {
     reg_t length;
@@ -78,9 +78,9 @@ class SpikeSimulation {
 
     void report(const std::string& message) { failed = true; config.host->fail(config.host->opaque, message.c_str()); }
 
-    void retire(processor_t* core, reg_t pc, insn_t instruction) {
+    cosim_retired_instruction_t retiredInstruction(processor_t* core, reg_t pc, insn_t instruction) {
         auto* state = core->get_state();
-        cosim_retire_event_t event{};
+        cosim_retired_instruction_t event{};
         event.pc = pc;
         event.instruction = static_cast<unsigned>(instruction.bits());
         event.rawInstruction = static_cast<unsigned>(instruction.bits());
@@ -107,7 +107,7 @@ class SpikeSimulation {
             event.memorySize = static_cast<unsigned>(__builtin_ctz(std::get<2>(reads.front())));
             event.memoryMask = uint8_t((1u << (1u << event.memorySize)) - 1u);
         }
-        config.host->retire(config.host->opaque, &event);
+        return event;
     }
 
 public:
@@ -133,7 +133,9 @@ public:
         return 0;
     }
 
-    int step() {
+    int step(cosim_step_result_t* result) {
+        if (!result) return 1;
+        *result = {};
         try {
             auto* core = sim->get_core(0);
             auto* state = core->get_state();
@@ -141,10 +143,22 @@ public:
             const auto fetch = core->get_mmu()->load_insn(pc);
             const auto before = state->minstret->read();
             core->step(1);
-            if (state->minstret->read() != before) retire(core, pc, fetch.insn);
-            return failed ? 1 : 0;
+            result->advanced = 1;
+            if (state->minstret->read() != before) {
+                result->status = COSIM_STEP_RETIRED;
+                result->instruction = retiredInstruction(core, pc, fetch.insn);
+            } else {
+                result->status = COSIM_STEP_NO_RETIRE;
+            }
+            if (failed) {
+                result->status = COSIM_STEP_FAILED;
+                return 1;
+            }
+            return 0;
         } catch (const std::exception& error) {
-            report(error.what()); return 1;
+            report(error.what());
+            result->status = COSIM_STEP_FAILED;
+            return 1;
         }
     }
     int finished() const { return failed; }
@@ -163,10 +177,21 @@ void* create(const cosim_simulation_config_t* config) {
     }
 }
 int reset(void* simulation, unsigned cycles) { return static_cast<SpikeSimulation*>(simulation)->reset(cycles); }
-int step(void* simulation) { return static_cast<SpikeSimulation*>(simulation)->step(); }
+int step(void* simulation, cosim_step_result_t* result) {
+    return static_cast<SpikeSimulation*>(simulation)->step(result);
+}
 int finished(void* simulation) { return static_cast<SpikeSimulation*>(simulation)->finished(); }
+int tracePoll(void*, cosim_signal_event_handle_t** event) { if (event) *event = nullptr; return 0; }
+int traceSchemaCount(void*, unsigned* count) { if (count) *count = 0; return count ? 0 : 1; }
+int traceSchemaGet(void*, unsigned, cosim_signal_schema_t*) { return 1; }
+int traceSchemaFieldGet(void*, unsigned, unsigned, cosim_signal_field_t*) { return 1; }
+int traceEventInfo(cosim_signal_event_handle_t*, cosim_signal_event_t*) { return 1; }
+int traceEventCopy(cosim_signal_event_handle_t*, uint64_t*, size_t, size_t*) { return 2; }
+void traceEventRelease(cosim_signal_event_handle_t*) {}
 void destroy(void* simulation) { delete static_cast<SpikeSimulation*>(simulation); }
 }
 
 extern "C" const cosim_simulation_api_t cosim_simulation_api = {
-    COSIM_SIMULATION_API_VERSION, "spike", describe, create, reset, step, finished, destroy};
+    COSIM_SIMULATION_API_VERSION, "spike", describe, create, reset, step, finished,
+    tracePoll, traceSchemaCount, traceSchemaGet, traceSchemaFieldGet,
+    traceEventInfo, traceEventCopy, traceEventRelease, destroy};
