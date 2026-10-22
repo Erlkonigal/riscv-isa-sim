@@ -164,26 +164,32 @@ public:
     int finished() const { return failed; }
 };
 
-int describe(cosim_platform_spec_t* output) {
+COSIM_EXTERN_C_LOCAL int describe(cosim_platform_spec_t* output) {
     if (!output || !fpr_name) return 1;
     *output = platform;
     return 0;
 }
-void* create(const cosim_simulation_config_t* config) {
+COSIM_EXTERN_C_LOCAL void* create(const cosim_simulation_config_t* config) {
     try { return new SpikeSimulation(config); }
     catch (const std::exception& error) {
         if (config && config->host && config->host->fail) config->host->fail(config->host->opaque, error.what());
         return nullptr;
     }
 }
-int reset(void* simulation, unsigned cycles) { return static_cast<SpikeSimulation*>(simulation)->reset(cycles); }
-int step(void* simulation, cosim_step_result_t* result) {
+COSIM_EXTERN_C_LOCAL int reset(void* simulation, unsigned cycles) {
+    return static_cast<SpikeSimulation*>(simulation)->reset(cycles);
+}
+COSIM_EXTERN_C_LOCAL int step(void* simulation, cosim_step_result_t* result) {
     return static_cast<SpikeSimulation*>(simulation)->step(result);
 }
-int finished(void* simulation) { return static_cast<SpikeSimulation*>(simulation)->finished(); }
-void destroy(void* simulation) { delete static_cast<SpikeSimulation*>(simulation); }
+COSIM_EXTERN_C_LOCAL int finished(void* simulation) {
+    return static_cast<SpikeSimulation*>(simulation)->finished();
+}
+COSIM_EXTERN_C_LOCAL void destroy(void* simulation) {
+    delete static_cast<SpikeSimulation*>(simulation);
+}
 }
 
-extern "C" const cosim_simulation_api_t cosim_simulation_api = {
+COSIM_EXTERN_C const cosim_simulation_api_t cosim_simulation_api = {
     COSIM_SIMULATION_API_VERSION, "spike", describe, create, reset, step, finished,
     destroy};
