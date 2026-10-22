@@ -62,9 +62,13 @@ public:
     bool mmio_fetch(reg_t address, size_t size, uint8_t* bytes) override { return read(address, size, true, bytes); }
     bool mmio_load(reg_t address, size_t size, uint8_t* bytes) override { return read(address, size, false, bytes); }
     bool mmio_store(reg_t address, size_t size, const uint8_t* bytes) override {
+        const unsigned lane = address & 7;
+        if (!size || size > sizeof(uint64_t) || lane + size > sizeof(uint64_t)) return false;
         const int shift = __builtin_ctzll(size);
-        const uint8_t mask = size == 8 ? 0xff : uint8_t((1u << size) - 1u);
-        return host->write(host->opaque, address, shift, unpack(bytes, size), mask) <= 1;
+        const uint8_t localMask = size == 8 ? 0xff : uint8_t((1u << size) - 1u);
+        const uint8_t mask = uint8_t(localMask << lane);
+        const uint64_t data = unpack(bytes, size) << (lane * 8);
+        return host->write(host->opaque, address, shift, data, mask) <= 1;
     }
 };
 
@@ -143,7 +147,7 @@ public:
             const auto fetch = core->get_mmu()->load_insn(pc);
             const auto before = state->minstret->read();
             core->step(1);
-            result->advanced = 1;
+            result->elapsedCycles = 1;
             if (state->minstret->read() != before) {
                 result->status = COSIM_STEP_RETIRED;
                 result->instruction = retiredInstruction(core, pc, fetch.insn);

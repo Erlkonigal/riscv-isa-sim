@@ -20,8 +20,9 @@ description matches the default Jeucore simulation map: RAM at `0x80000000`, an
 uncached RAM page, and the UART at `0x12002000`.
 
 Each `step` returns either one retired instruction or an idle result through the
-common API v5 result structure. Pass and fail PCs are configured by the cosim
-runtime rather than embedded in this platform description.
+common API v6 result structure and reports one elapsed CPU cycle for every core
+step. Pass and fail PCs are configured by the cosim runtime rather than embedded
+in this platform description.
 
 The adapter accepts the common waveform configuration in the cosim API for
 ABI compatibility. Spike has no RTL waveform backend, so it ignores waveform
