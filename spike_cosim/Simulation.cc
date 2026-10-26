@@ -1,4 +1,4 @@
-// Spike reference adapter for cosim ABI v8. Spike runs synchronously on the
+// Spike reference adapter for cosim ABI v9. Spike runs synchronously on the
 // runner thread: step() executes until exactly one instruction retires. All RAM
 // traffic goes to the runtime-owned golden memory and all device traffic is
 // replayed against the DUT MMIO trace; Spike never sees the TL bus.

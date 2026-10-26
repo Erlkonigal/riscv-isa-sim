@@ -1,6 +1,6 @@
 # Spike cosim adapter
 
-This directory builds Spike's reference shared library (cosim REF API v8). It
+This directory builds Spike's reference shared library (cosim REF API v9). It
 links Spike as a static library bundle and uses the cosim headers from the
 sibling checkout. It does not link the cosim runtime.
 
