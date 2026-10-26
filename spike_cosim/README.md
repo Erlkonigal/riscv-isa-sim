@@ -4,13 +4,20 @@ This directory builds Spike's reference shared library (cosim REF API v9). It
 links Spike as a static library bundle and uses the cosim headers from the
 sibling checkout. It does not link the cosim runtime.
 
+This workspace's host C++ builds use `clang`/`clang++`. Configure a dedicated
+build directory and build only the REF library when the full Spike command-line
+tool is not needed:
+
 ```sh
-make COSIM_INCLUDE_DIR=/path/to/cosim/include libspike_cosim.so
+mkdir -p build-cosim
+cd build-cosim
+CC=clang CXX=clang++ ../configure --prefix=/usr/local
+make -j8 COSIM_INCLUDE_DIR=/path/to/cosim/include libspike_cosim.so
 ```
 
-The library exports `cosim_ref_api` and runs synchronously on the runner thread:
-each `step` executes until exactly one instruction retires and returns its
-retirement record. Spike never sees the TL bus or simulation time. Instruction
+The library exports `cosim_ref_api` and runs synchronously on a dedicated REF
+worker thread: each `step` executes until exactly one instruction retires and
+returns its retirement record. Spike never sees the TL bus or simulation time. Instruction
 fetches and RAM accesses are served by the runtime-owned golden memory through
 the `memory` callbacks; device accesses are replayed against the DUT MMIO trace
 through the `mmio` callbacks, so external effects execute exactly once on the

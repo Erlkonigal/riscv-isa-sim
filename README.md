@@ -115,6 +115,11 @@ install path.
     $ make
     $ [sudo] make install
 
+For the Clang-based cosim builds used by this workspace branch, select Clang at
+configure time (the generated build tree records the choice):
+
+    $ CC=clang CXX=clang++ ../configure --prefix=$RISCV
+
 If your system uses the `yum` package manager, you can substitute
 `yum install dtc` for the first step.
 

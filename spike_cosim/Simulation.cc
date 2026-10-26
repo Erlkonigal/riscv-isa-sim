@@ -229,7 +229,7 @@ public:
 };
 
 COSIM_EXTERN_C_LOCAL int describe(cosim_ref_description_t* output) {
-    if (!output || !fpr_name) return 1;
+    if (!output) return 1;
     *output = description;
     return 0;
 }
